@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Robot Arm Control Panel</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        table, th, td { border: 1px solid black; padding: 8px; border-collapse: collapse; }
+        form { margin-bottom: 20px; }
+        .slider { width: 200px; }
+        .motor { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Robot Arm Control Panel</h2>
+    <form id="controlForm">
+        <div class="motor">Motor 1: <input type="range" name="motor1" min="0" max="180" value="90" class="slider" oninput="document.getElementById('val1').textContent = this.value"> <span id="val1">90</span></div>
+        <div class="motor">Motor 2: <input type="range" name="motor2" min="0" max="180" value="90" class="slider" oninput="document.getElementById('val2').textContent = this.value"> <span id="val2">90</span></div>
+        <div class="motor">Motor 3: <input type="range" name="motor3" min="0" max="180" value="90" class="slider" oninput="document.getElementById('val3').textContent = this.value"> <span id="val3">90</span></div>
+        <div class="motor">Motor 4: <input type="range" name="motor4" min="0" max="180" value="90" class="slider" oninput="document.getElementById('val4').textContent = this.value"> <span id="val4">90</span></div>
+        <div class="motor">Motor 5: <input type="range" name="motor5" min="0" max="180" value="90" class="slider" oninput="document.getElementById('val5').textContent = this.value"> <span id="val5">90</span></div>
+        <div class="motor">Motor 6: <input type="range" name="motor6" min="0" max="180" value="90" class="slider" oninput="document.getElementById('val6').textContent = this.value"> <span id="val6">90</span></div>
+        <button type="reset">Reset</button>
+        <button type="button" onclick="savePose()">Save Pose</button>
+        <button type="button" onclick="runPose()">Run</button>
+    </form>
+    <div id="posesTable"></div>
+    <script>
+        function fetchPoses() {
+            fetch("get_run_pose.php")
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("posesTable").innerHTML = data;
+            });
+        }
+        function savePose() {
+            const formData = new FormData(document.getElementById("controlForm"));
+            fetch("save_pose.php", {
+                method: "POST",
+                body: formData
+            }).then(() => fetchPoses());
+        }
+        function runPose() {
+            fetch("update_status.php", {
+                method: "POST"
+            }).then(() => alert("Pose run executed."));
+        }
+        function removePose(id) {
+            fetch(`remove_pose.php?id=${id}`, { method: "GET" })
+            .then(() => fetchPoses());
+        }
+        function loadPose(id) {
+            fetch(`load_pose.php?id=${id}`, { method: "GET" })
+            .then(response => response.json())
+            .then(data => {
+                for (let i = 1; i <= 6; i++) {
+                    const slider = document.querySelector(`[name=motor${i}]`);
+                    slider.value = data[`motor${i}`];
+                    document.getElementById(`val${i}`).textContent = data[`motor${i}`];
+                }
+            });
+        }
+        window.onload = fetchPoses;
+    </script>
+</body>
+</html>
